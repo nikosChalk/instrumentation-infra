@@ -899,9 +899,10 @@ class Nginx(WebServer):
     ))]
 
     @param_attrs
-    def __init__(self, version, build_flags: List[str] = []):
+    def __init__(self, version, build_flags: List[str] = [], conf = ''):
         super().__init__()
         self.build_flags = build_flags
+        self.conf=conf
 
     def fetch(self, ctx):
         download(ctx, 'https://nginx.org/download/' + self.tar_name())
@@ -973,33 +974,40 @@ class Nginx(WebServer):
         os.makedirs('logs', exist_ok=True)
 
         runner.ctx.log.debug('creating nginx.conf')
+        runner.ctx.log.debug('creating %s' %self.conf)
         a = runner.ctx.args
-        config_template = '''
-        error_log {runner.rundir}/error.log error;
-        lock_file {runner.rundir}/nginx.lock;
-        pid {runner.rundir}/nginx.pid;
-        worker_processes {a.workers};
-        worker_cpu_affinity auto;
-        events {{
-            worker_connections {a.worker_connections};
-            use epoll;
-        }}
-        http {{
-            server {{
-                listen {a.port};
-                server_name localhost;
-                sendfile on;
-                access_log off;
-                keepalive_requests 500;
-                keepalive_timeout 500ms;
-                location / {{
-                    root {runner.rundir}/www;
-                }}
-            }}
-        }}
-        '''
-        with open('nginx.conf', 'w') as f:
-            f.write(config_template.format(**locals()))
+
+
+        if not self.conf or not os.path.exists(self.conf):
+          config_template = '''
+          error_log {runner.rundir}/error.log error;
+          lock_file {runner.rundir}/nginx.lock;
+          pid {runner.rundir}/nginx.pid;
+          worker_processes {a.workers};
+          worker_cpu_affinity auto;
+          events {{
+              worker_connections {a.worker_connections};
+              use epoll;
+          }}
+          http {{
+              server {{
+                  listen {a.port};
+                  server_name localhost;
+                  sendfile on;
+                  access_log off;
+                  keepalive_requests 500;
+                  keepalive_timeout 500ms;
+                  location / {{
+                      root {runner.rundir}/www;
+                  }}
+              }}
+          }}
+          '''
+          with open('nginx.conf', 'w') as f:
+              f.write(config_template.format(**locals()))
+        else:
+            runner.ctx.log.debug('Found nginx.conf:%s' % self.conf)
+            shutil.copyfile(self.conf,'nginx.conf')
 
     def pid_file(self, runner):
         return '{runner.rundir}/nginx.pid'.format(**locals())
