@@ -101,6 +101,9 @@ class Libcxx(Package):
         ranlib = run(ctx, 'which llvm-ranlib').stdout.rstrip()
         ar = run(ctx, 'which llvm-ar').stdout.rstrip()
 
+        ctx.cflags += ['-fPIE']
+        ctx.cxxflags += ['-fPIE']
+        ctx.ldflags += ['-fPIE']
         ctx.runenv.update({
             'CC': ctx.cc,
             'CXX': ctx.cxx,

@@ -20,7 +20,11 @@ class Musl(Package):
     may be paths to .patch files that will be applied with ``patch -p1``, or
     choices from the following built-in patches:
 
-    - **musl-symbol-hack**  removes some weak symbols from musl. This has been taken from https://github.com/vusec/typeisolation.
+    - **musl-symbol-hack**  removes some weak symbols from musl. This has been take
+      from https://github.com/vusec/typeisolation.
+
+    Currently MUSL is built in a way that the target binary *should* be PIE,
+    although this is not a strict requirement
 
     :identifier: musl-<version>
     :param version: the full musl version to download, like X.Y.Z
@@ -78,6 +82,9 @@ class Musl(Package):
         os.chdir('obj')
 
         self.llvm.configure(ctx)
+        ctx.cflags += ['-fPIE']
+        ctx.cxxflags += ['-fPIE']
+        ctx.ldflags += ['-fPIE']
         ctx.runenv.update({
             'CC': ctx.cc,
             'CXX': ctx.cxx,
@@ -142,27 +149,27 @@ class Musl(Package):
 
         GCCPATHHACK = '/usr/lib/gcc/x86_64-linux-gnu/7.5.0'
         ldflags = [
-            '-nostdlib',
-            '-Wl,--start-group', '-Wl,-whole-archive', '-lunwind', '-Wl,-no-whole-archive',
-            self.path(ctx, 'install')+'/lib/crt1.o',
+            '-Wl,--verbose',
+            '-nostdlib', '-nostdinc', '-static-libgcc',
+            '--sysroot='+self.path(ctx, 'install'),
+            '-isystem', self.path(ctx, 'install/include'),
+            '-fPIE', '-pie',
+            '-Bstatic', '--no-undefined',
+            self.path(ctx, 'install')+'/lib/Scrt1.o',
             self.path(ctx, 'install')+'/lib/crti.o',
-            self.path(ctx, 'install')+'/lib/crtn.o',
-            GCCPATHHACK+'/crtbeginT.o',
-            GCCPATHHACK+'/crtend.o'
+            GCCPATHHACK+'/crtbeginS.o',
+            '-L'+self.path(ctx, 'install')+'/lib',
+            '-Wl,--start-group',
         ]
         ldflags += ctx.ldflags
         ctx.ldflags = ldflags
 
         ctx.extra_libs = [
-            '-static',
-            '--sysroot='+self.path(ctx, 'install'),
-            '-L'+self.path(ctx, 'install')+'/lib',
-            '-static-libgcc', '-nostdinc',
-            '-isystem', self.path(ctx, 'install/include'),
-            '-L'+GCCPATHHACK,
-            '-Wl,--verbose',
-            '-lc', '-lm', '-lc++abi', '-lc++', '-lunwind',
-            '-Wl,--end-group'
+            '-Wl,-whole-archive', '-lunwind', '-Wl,-no-whole-archive',
+            '-lc', '-lm', '-lc++abi', '-lc++',
+            '-Wl,--end-group',
+            GCCPATHHACK+'/crtendS.o',
+            self.path(ctx, 'install')+'/lib/crtn.o',
         ]
 
         benchmark_flags = {
