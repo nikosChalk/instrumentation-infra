@@ -7,6 +7,7 @@ from .prelink import LibElf, Prelink
 from .pyelftools import PyElfTools
 from .libshrink import LibShrink
 from .llvm_passes import BuiltinLLVMPasses, LLVMPasses
+from .llvm_plugins import LLVMPlugins, BuiltinLLVMPlugins
 from .perl import Perl, SPECPerl, Perlbrew
 from .tools import Nothp, RusageCounters
 from .ninja import Ninja
