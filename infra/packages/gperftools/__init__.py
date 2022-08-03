@@ -14,6 +14,7 @@ class LibUnwind(Package):
 
     def __init__(self, version: str):
         self.version = version
+        self.patches = []
 
     def ident(self):
         return 'libunwind-' + self.version
@@ -33,7 +34,25 @@ class LibUnwind(Package):
     def is_built(self, ctx):
         return os.path.exists('obj/src/.libs/libunwind.so')
 
+    def _apply_patches(self, ctx):
+        os.chdir(self.path(ctx, 'src'))
+
+        gcc_version = run(ctx, '/usr/bin/gcc --version').stdout.strip().split()[-1] # libunwind is built with the default system's compiler, not ctx.cc
+        gcc_major = int(gcc_version.split('.')[0])
+        if gcc_major >= 10:
+            self.patches.insert(0, '0001-Fix-compilation-with-fno-common')
+
+        config_root = os.path.dirname(os.path.abspath(__file__))
+        for path in self.patches:
+            if '/' not in path:
+                path = '%s/%s.patch' % (config_root, path)
+            if apply_patch(ctx, path, 1):
+                ctx.log.warning('applied patch %s to libunwind '
+                                'directory' % path)
+        os.chdir(self.path(ctx))
+
     def build(self, ctx):
+        self._apply_patches(ctx)
         os.makedirs('obj', exist_ok=True)
         os.chdir('obj')
         if not os.path.exists('Makefile'):
