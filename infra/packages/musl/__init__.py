@@ -1,5 +1,6 @@
 import os
 import shutil
+import pathlib
 from typing import List, Optional
 from ...package import Package
 from ...util import Namespace, run, apply_patch, download, qjoin
@@ -147,7 +148,7 @@ class Musl(Package):
             '-isystem', self.path(ctx, 'musl-hacks')+'/include',
         ]
 
-        GCCPATHHACK = '/usr/lib/gcc/x86_64-linux-gnu/7.5.0'
+        GCCPATHHACK = str(pathlib.Path(run(ctx, '/usr/bin/gcc -print-libgcc-file-name').stdout.strip()).parent) # e.g. /usr/lib/gcc/x86_64-linux-gnu/7.5.0
         ldflags = [
             '-Wl,--verbose',
             '-nostdlib', '-nostdinc', '-static-libgcc',
