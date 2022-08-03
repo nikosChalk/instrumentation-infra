@@ -37,7 +37,7 @@ class LibUnwind(Package):
     def _apply_patches(self, ctx):
         os.chdir(self.path(ctx, 'src'))
 
-        gcc_version = run(ctx, '/usr/bin/gcc --version').stdout.strip().split()[-1] # libunwind is built with the default system's compiler, not ctx.cc
+        gcc_version = run(ctx, '/usr/bin/gcc --version').stdout.strip().splitlines()[0].split()[-1] # libunwind is built with the default system's compiler, not ctx.cc
         gcc_major = int(gcc_version.split('.')[0])
         if gcc_major >= 10:
             self.patches.insert(0, '0001-Fix-compilation-with-fno-common')
