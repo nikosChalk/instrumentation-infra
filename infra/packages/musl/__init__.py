@@ -202,7 +202,7 @@ class Musl(Package):
             },
             '462.libquantum=default=default=default': {
                 'EXTRA_SOURCES': [
-                    (self.path(ctx, '../llvm-9.0.1/src')+
+                    (self.path(ctx, '../llvm-11.1.0/src')+
                         '/projects/compiler-rt/lib/builtins/mulsc3.c')
                 ],
             },
