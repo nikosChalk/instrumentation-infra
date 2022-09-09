@@ -121,6 +121,10 @@ class Musl(Package):
     def install(self, ctx):
         os.chdir('obj')
         run(ctx, 'make install')
+        arch = run(ctx, 'uname -m').stdout.strip()
+        if arch == 'aarch64':
+            src = run(ctx, 'gcc -print-libgcc-file-name').stdout.strip()
+            shutil.copyfile(src, '../install/lib')
 
     def configure(self, ctx: Namespace):
         """
@@ -166,8 +170,12 @@ class Musl(Package):
         ctx.ldflags = ldflags
 
         ctx.extra_libs = [
-            '-Wl,-whole-archive', '-lunwind', '-Wl,-no-whole-archive',
-            '-lc', '-lm', '-lc++abi', '-lc++',
+            '-Wl,-whole-archive', '-lunwind', '-Wl,-no-whole-archive'
+        ]
+        arch = run(ctx, 'uname -m').stdout.strip()
+        if arch == 'aarch64':
+            ctx.extra_libs += ['-lgcc']
+        ctx.extra_libs += ['-lc', '-lm', '-lc++abi', '-lc++',
             '-Wl,--end-group',
             GCCPATHHACK+'/crtendS.o',
             self.path(ctx, 'install')+'/lib/crtn.o',

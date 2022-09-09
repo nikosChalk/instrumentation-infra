@@ -1,0 +1,40 @@
+From faed8aa6b4271df4d4d49bef0f85d5de1e49856b Mon Sep 17 00:00:00 2001
+From: nikosChalk <chalkiadakisn@gmail.com>
+Date: Thu, 8 Sep 2022 22:42:57 +0200
+Subject: [PATCH] commit eb474c995eadef3e from original repo
+
+---
+ src/base/atomicops.h | 8 ++++++++
+ 1 file changed, 8 insertions(+)
+
+diff --git a/src/base/atomicops.h b/src/base/atomicops.h
+index be038f3..dac95be 100644
+--- a/src/base/atomicops.h
++++ b/src/base/atomicops.h
+@@ -102,8 +102,14 @@
+                      + __GNUC_MINOR__ * 100           \
+                      + __GNUC_PATCHLEVEL__)
+ 
++#define CLANG_VERSION (__clang_major__ * 10000         \
++                       + __clang_minor__ * 100         \
++                       + __clang_patchlevel__)
++
+ #if defined(TCMALLOC_PREFER_GCC_ATOMICS) && defined(__GNUC__) && GCC_VERSION >= 40700
+ #include "base/atomicops-internals-gcc.h"
++#elif defined(TCMALLOC_PREFER_GCC_ATOMICS) && defined(__clang__) && CLANG_VERSION >= 30400
++#include "base/atomicops-internals-gcc.h"
+ #elif defined(__MACH__) && defined(__APPLE__)
+ #include "base/atomicops-internals-macosx.h"
+ #elif defined(__GNUC__) && defined(ARMV6)
+@@ -120,6 +126,8 @@
+ #include "base/atomicops-internals-mips.h"
+ #elif defined(__GNUC__) && GCC_VERSION >= 40700
+ #include "base/atomicops-internals-gcc.h"
++#elif defined(__clang__) && CLANG_VERSION >= 30400
++#include "base/atomicops-internals-gcc.h"
+ #else
+ #error You need to implement atomic operations for this architecture
+ #endif
+-- 
+2.25.1
+
