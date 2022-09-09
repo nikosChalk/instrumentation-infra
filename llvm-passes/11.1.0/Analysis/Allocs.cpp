@@ -120,7 +120,7 @@ bool CustomAllocFuncParser::parse(cl::Option &O, StringRef ArgName,
     AllocInfo &Info = Val.second;
 
     // Also allow split by . because , gives issues when used with -Wl,...
-    for (const std::string ArgPart : split(ArgValue.str(), '.')) {
+    for (const std::string& ArgPart : split(ArgValue.str(), '.')) {
         // Format is <funcname>:<type>:<membarg>[:<membsizearg>]
         std::vector<std::string> parts = split(ArgPart, ':');
 
