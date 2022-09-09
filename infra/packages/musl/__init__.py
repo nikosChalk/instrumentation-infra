@@ -107,9 +107,10 @@ class Musl(Package):
         shutil.rmtree('../src/src/malloc')
         # GPERFTOOLS SPECIFIC END
 
+        arch = run(ctx, 'uname -m').stdout.strip()
         os.makedirs(self.path(ctx, 'musl-hacks/include'), exist_ok=True)
         os.symlink('/usr/include/linux', self.path(ctx, 'musl-hacks/include/linux'))
-        os.symlink('/usr/include/asm', self.path(ctx, 'musl-hacks/include/asm'))
+        os.symlink(f'/usr/include/{arch}-linux-gnu/asm', self.path(ctx, 'musl-hacks/include/asm'))
         os.symlink('/usr/include/asm-generic', self.path(ctx, 'musl-hacks/include/asm-generic'))
 
         run(ctx, 'make clean')

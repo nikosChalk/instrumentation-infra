@@ -118,7 +118,7 @@ class Libcxx(Package):
             run(ctx, [
                 'cmake', '../../src/libunwind',
                 '-DCMAKE_INSTALL_PREFIX=' + prefix,
-                '-DLLVM_PATH=',
+                '-DLLVM_PATH=' + self.instance.llvm.path(ctx, 'src'),
                 '-DLIBUNWIND_ENABLE_SHARED=OFF',
                 '-DCMAKE_BUILD_TYPE=Release',
                 '-DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY',
@@ -134,7 +134,7 @@ class Libcxx(Package):
             run(ctx, [
                 'cmake', '../../src/libcxxabi',
                 '-DCMAKE_INSTALL_PREFIX=' + prefix,
-                '-DLLVM_PATH=',
+                '-DLLVM_PATH=' + self.instance.llvm.path(ctx, 'src'),
                 '-DLIBCXXABI_LIBCXX_PATH='+self.path(ctx, 'src/libcxx'),
                 '-DLIBCXXABI_USE_LLVM_UNWINDER=ON',
                 '-DLIBCXXABI_ENABLE_SHARED=OFF',
@@ -158,7 +158,7 @@ class Libcxx(Package):
             run(ctx, [
                 'cmake', '../../src/libcxx',
                 '-DCMAKE_INSTALL_PREFIX=' + prefix,
-                '-DLLVM_PATH=',
+                '-DLLVM_PATH=' + self.instance.llvm.path(ctx, 'src'),
                 '-DLIBCXX_CXX_ABI=libcxxabi',
                 '-DLIBCXX_CXX_ABI_INCLUDE_PATHS='+libcxxabisrc+'/include',
                 '-DLIBCXX_CXX_ABI_LIBRARY_PATH='+libcxxabiobj+'/lib',
