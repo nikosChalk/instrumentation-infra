@@ -107,10 +107,9 @@ class Musl(Package):
         shutil.rmtree('../src/src/malloc')
         # GPERFTOOLS SPECIFIC END
 
-        arch = run(ctx, 'uname -m').stdout.strip()
         os.makedirs(self.path(ctx, 'musl-hacks/include'), exist_ok=True)
         os.symlink('/usr/include/linux', self.path(ctx, 'musl-hacks/include/linux'))
-        os.symlink(f'/usr/include/{arch}-linux-gnu/asm', self.path(ctx, 'musl-hacks/include/asm'))
+        os.symlink(f'/usr/include/{ctx.arch}-linux-gnu/asm', self.path(ctx, 'musl-hacks/include/asm'))
         os.symlink('/usr/include/asm-generic', self.path(ctx, 'musl-hacks/include/asm-generic'))
 
         run(ctx, 'make clean')
@@ -122,8 +121,7 @@ class Musl(Package):
     def install(self, ctx):
         os.chdir('obj')
         run(ctx, 'make install')
-        arch = run(ctx, 'uname -m').stdout.strip()
-        if arch == 'aarch64':
+        if ctx.arch == 'aarch64':
             src = run(ctx, 'gcc -print-libgcc-file-name').stdout.strip()
             shutil.copyfile(src, '../install/lib')
 
@@ -173,8 +171,7 @@ class Musl(Package):
         ctx.extra_libs = [
             '-Wl,-whole-archive', '-lunwind', '-Wl,-no-whole-archive'
         ]
-        arch = run(ctx, 'uname -m').stdout.strip()
-        if arch == 'aarch64':
+        if ctx.arch == 'aarch64':
             ctx.extra_libs += ['-lgcc']
         ctx.extra_libs += ['-lc', '-lm', '-lc++abi', '-lc++',
             '-Wl,--end-group',

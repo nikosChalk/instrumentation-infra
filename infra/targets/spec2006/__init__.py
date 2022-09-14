@@ -462,8 +462,16 @@ class SPEC2006(Target):
                 print('FC          = %s' % fortranc)
                 print('CLD         = %s %s' % (ctx.cc, ldflags))
                 print('CXXLD       = %s %s' % (ctx.cxx, ldflags))
-                print('COPTIMIZE   = -std=gnu89')
-                print('CXXOPTIMIZE = -std=c++98') # fix __float128 in old clang
+                if ctx.arch == 'aarch64':
+                    # aarch64 with ARMv8-a architecture
+                    print('COPTIMIZE   = -std=gnu89 -march=armv8-a -mfpu=crypto-neon-fp-armv8 -mtune=thunderx')
+                    print('CXXOPTIMIZE = -std=gnu++98 -march=armv8-a -mfpu=crypto-neon-fp-armv8 -mtune=thunderx')
+                    print('FOPTIMIZE   = -march=armv8-a -mfpu=crypto-neon-fp-armv8 -mtune=thunderx')
+                    print('F77OPTIMIZE = -march=armv8-a -mfpu=crypto-neon-fp-armv8 -mtune=thunderx')
+                else:
+                    print('COPTIMIZE   = -std=gnu89')
+                    print('CXXOPTIMIZE = -std=c++98') # fix __float128 in old clang
+
                 if extra_libs:
                     print('EXTRA_LIBS = %s' % (extra_libs))
 
@@ -489,7 +497,7 @@ class SPEC2006(Target):
 
                 benchmark_flags = {
                         '400.perlbench=default=default=default': {
-                            'CPORTABILITY': ['-DSPEC_CPU_LINUX_X64']
+                            'CPORTABILITY': ['-DSPEC_CPU_LINUX_X64' if ctx.arch == 'x86_64' else '-DSPEC_CPU_LINUX']
                         },
                         '462.libquantum=default=default=default': {
                             'CPORTABILITY': ['-DSPEC_CPU_LINUX']

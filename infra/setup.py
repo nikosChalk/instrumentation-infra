@@ -4,6 +4,7 @@ import logging
 import sys
 import traceback
 import datetime
+import subprocess
 from . import commands
 from .command import Command, get_deps
 from .util import FatalError, Namespace, Index, LazyIndex
@@ -233,6 +234,7 @@ class Setup:
         self.ctx.cxxflags = []
         self.ctx.ldflags = []
         self.ctx.lib_ldflags = []
+        self.ctx.arch = subprocess.run(['uname', '-m'], check=True, stdout=subprocess.PIPE).stdout.decode('ascii').strip()
 
         self.ctx.starttime = None
         self.ctx.workdir = None
