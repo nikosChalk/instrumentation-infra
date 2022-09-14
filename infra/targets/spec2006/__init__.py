@@ -499,6 +499,9 @@ class SPEC2006(Target):
                         '400.perlbench=default=default=default': {
                             'CPORTABILITY': ['-DSPEC_CPU_LINUX_X64' if ctx.arch == 'x86_64' else '-DSPEC_CPU_LINUX']
                         },
+                        '403.gcc=default=default=default': {
+                            'CPORTABILITY': ['-DSPEC_CPU_LINUX']
+                        },
                         '462.libquantum=default=default=default': {
                             'CPORTABILITY': ['-DSPEC_CPU_LINUX']
                         },
