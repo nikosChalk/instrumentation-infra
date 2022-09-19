@@ -2,7 +2,7 @@ import os
 import shutil
 from typing import List
 from ...package import Package
-from ...util import Namespace, run, apply_patch, download
+from ...util import Namespace, run, apply_patch, download, qjoin
 from ..gnu import AutoMake
 
 
@@ -12,23 +12,29 @@ class LibUnwind(Package):
     :param version: version to download
     """
 
-    def __init__(self, version: str):
+    def __init__(self, version: str, glibc: Package = None):
         self.version = version
         self.patches = []
+        self.glibc = glibc
 
     def ident(self):
-        return 'libunwind-' + self.version
+        name = 'libunwind-'
+        if self.glibc is not None:
+            name += self.glibc.ident()
+        else:
+            name += self.version
+        return name
 
     def is_fetched(self, ctx):
         return os.path.exists('src')
 
     def fetch(self, ctx):
         urlbase = 'http://download.savannah.gnu.org/releases/libunwind/'
-        dirname = self.ident()
-        tarname = dirname + '.tar.gz'
+        tarname = 'libunwind-' + self.version + '.tar.gz'
+        untaredname = 'libunwind-' + self.version
         download(ctx, urlbase + tarname)
         run(ctx, ['tar', '-xf', tarname])
-        shutil.move(dirname, 'src')
+        shutil.move(untaredname, 'src')
         os.remove(tarname)
 
     def is_built(self, ctx):
@@ -39,7 +45,7 @@ class LibUnwind(Package):
 
         gcc_version = run(ctx, '/usr/bin/gcc --version').stdout.strip().splitlines()[0].split()[-1] # libunwind is built with the default system's compiler, not ctx.cc
         gcc_major = int(gcc_version.split('.')[0])
-        if gcc_major >= 10:
+        if gcc_major >= 10 or self.glibc is not None:
             self.patches.insert(0, '0001-Fix-compilation-with-fno-common')
 
         config_root = os.path.dirname(os.path.abspath(__file__))
@@ -56,7 +62,24 @@ class LibUnwind(Package):
         os.makedirs('obj', exist_ok=True)
         os.chdir('obj')
         if not os.path.exists('Makefile'):
-            run(ctx, ['../src/configure', '--prefix=' + self.path(ctx, 'install')])
+            cmd = ['../src/configure', '--prefix=' + self.path(ctx, 'install')]
+            if self.glibc is not None:
+                self.glibc.package_configure(ctx)
+                # trick libunwind into thinking that we are cross-compiling because our target architecture
+                # is newer than our current one and ./configure tries to compile and run a small C program
+                # Also, we have messed up the sysroot path so ./configure won't find the libraries
+                cmd += ['--host=aarch64-unknown-linux-gnu']
+            else:
+                ctx.cc  = '/usr/bin/gcc'
+                ctx.cxx = '/usr/bin/g++'
+            ctx.runenv.update({
+                'CC': ctx.cc,
+                'CXX': ctx.cxx,
+                'CFLAGS': qjoin(ctx.cflags),
+                'CXXFLAGS': qjoin(ctx.cxxflags),
+                'LDFLAGS': qjoin(ctx.ldflags),
+            })
+            run(ctx, cmd)
         run(ctx, 'make -j%d' % ctx.jobs)
 
     def is_installed(self, ctx):
@@ -87,9 +110,10 @@ class Gperftools(Package):
     :param patches: optional patches to apply before building
     """
 
-    def __init__(self, commit: str, libunwind_version='1.4-rc1', patches: List[str] = []):
+    def __init__(self, commit: str, libunwind_version='1.4-rc1', glibc: Package = None, patches: List[str] = []):
         self.commit = commit
-        self.libunwind = LibUnwind(libunwind_version)
+        self.libunwind = LibUnwind(libunwind_version, glibc)
+        self.glibc = glibc
         self.patches = patches
 
     def ident(self):
@@ -97,6 +121,8 @@ class Gperftools(Package):
 
     def dependencies(self):
         yield AutoMake.default()
+        if self.glibc is not None:
+            yield self.glibc
         yield self.libunwind
 
     def is_fetched(self, ctx):
@@ -133,6 +159,8 @@ class Gperftools(Package):
         os.chdir('obj')
         if not os.path.exists('Makefile'):
             prefix = self.path(ctx, 'install')
+            if self.glibc is not None:
+                assert(False) # FIXME: Implement me! See CustomGperftools
             run(ctx, [
                 '../src/configure',
                 'CPPFLAGS=-I' + self.libunwind.path(ctx, 'install/include'),
@@ -158,6 +186,8 @@ class Gperftools(Package):
 
         :param ctx: the configuration context
         """
+        if self.glibc is not None:
+            self.glibc.configure(ctx)
         self.libunwind.configure(ctx)
         cflags = ['-fno-builtin-' + fn
                   for fn in ('malloc', 'calloc', 'realloc', 'free')]
