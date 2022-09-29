@@ -58,6 +58,7 @@ class LibUnwind(Package):
         os.chdir(self.path(ctx))
 
     def build(self, ctx):
+        ctx = ctx.copy()
         self._apply_patches(ctx)
         os.makedirs('obj', exist_ok=True)
         os.chdir('obj')
@@ -72,6 +73,9 @@ class LibUnwind(Package):
             else:
                 ctx.cc  = '/usr/bin/gcc'
                 ctx.cxx = '/usr/bin/g++'
+                ctx.cflags = []
+                ctx.cxxflags = []
+                ctx.ldflags = []
             ctx.runenv.update({
                 'CC': ctx.cc,
                 'CXX': ctx.cxx,
@@ -121,8 +125,6 @@ class Gperftools(Package):
 
     def dependencies(self):
         yield AutoMake.default()
-        if self.glibc is not None:
-            yield self.glibc
         yield self.libunwind
 
     def is_fetched(self, ctx):
@@ -186,8 +188,6 @@ class Gperftools(Package):
 
         :param ctx: the configuration context
         """
-        if self.glibc is not None:
-            self.glibc.configure(ctx)
         self.libunwind.configure(ctx)
         cflags = ['-fno-builtin-' + fn
                   for fn in ('malloc', 'calloc', 'realloc', 'free')]
