@@ -41,7 +41,7 @@ class MTEglibc(Package):
         ]
         self.ldflags = [
             f'-L{self.host_sysroot}/lib64',
-            f'-L{self.host_sysroot}/lib64/gcc/aarch64-unknown-linux-gnu/11.2.0'
+            f'-L{self.host_sysroot}/lib64/gcc/aarch64-unknown-linux-gnu/11.2.0',
             f'-L{self.host_sysroot}/usr/lib64',
             f'--sysroot={self.host_sysroot}',
             f'-Wl,-rpath={self.target_sysroot}/lib64',
@@ -90,13 +90,14 @@ class MTEglibc(Package):
         ctx.ldflags += ['-Wl,--verbose', '-fPIE', '-pie'] + self.ldflags
 
         if static:
+            ctx.log.warning(f"!!! DISABLE relink.py as it produces wrong binaries with '-static' !!!")
             ctx.ldflags += [
                 '-static', '-static-libgcc',
                 '-Bstatic', '--no-undefined',
                 '-Wl,--start-group'
             ]
             if not enable_gperftools:
-                ctx.extra_libs = ['-lgcc', '-lstdc++', '-lc', '-lm', '-Wl,--end-group',]
+                ctx.extra_libs = ['-lgcc', '-lstdc++', '-lc', '-lm', '-Wl,--end-group']
             else:
                 ctx.extra_libs = [
                     # oder matters!
