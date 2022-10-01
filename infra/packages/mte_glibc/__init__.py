@@ -36,7 +36,7 @@ class MTEglibc(Package):
             f'-I{self.host_sysroot}/usr/include',
             f'-I{self.host_sysroot}/usr/include/c++/11.2.0',
             f'-I{self.host_sysroot}/usr/include/c++/11.2.0/aarch64-unknown-linux-gnu',
-            f'-I{self.host_sysroot}/usr/include/c++/11.2.0/backward/strstream',
+            f'-I{self.host_sysroot}/usr/include/c++/11.2.0/backward',
             f'--sysroot={self.host_sysroot}',
             '-march=armv8.5-a+memtag',
         ]
