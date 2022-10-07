@@ -258,7 +258,7 @@ class SPEC2006(Target):
         self._apply_patches(ctx)
 
         # add flags to compile with runtime support for benchmark utils
-        # RusageCounters().configure(ctx)
+        RusageCounters().configure(ctx)
 
         os.chdir(self.path(ctx))
         config = self._make_spec_config(ctx, instance)
@@ -613,11 +613,11 @@ class SPEC2006(Target):
 
                     rusage_results = \
                         list(RusageCounters.parse_results(ctx, path))
-                    # if not rusage_results:
-                    #     ctx.log.error('no staticlib results in %s, there was '
-                    #                   'probably an error' % path)
-                    #     benchmark_error = True
-                    #     continue
+                    if not rusage_results:
+                        ctx.log.error('no staticlib results in %s, there was '
+                                      'probably an error' % path)
+                        benchmark_error = True
+                        continue
 
                     for result in rusage_results:
                         for counter, value in result.items():
